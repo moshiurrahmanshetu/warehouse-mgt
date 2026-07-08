@@ -52,6 +52,55 @@ if ($user) {
             <span class="nav-badge">Soon</span>
         </a>
 
+        <?php if(hasPermission('warehouses.view') || hasPermission('zones.view') || hasPermission('racks.view') || hasPermission('shelves.view') || hasPermission('bins.view')): ?>
+        <div class="nav-section-title">Warehouse Management</div>
+        <?php endif; ?>
+
+        <?php if(hasPermission('warehouses.view')): ?>
+        <a href="<?= e(APP_URL) ?>/warehouses.php"
+           class="sidebar-nav-item <?= activeClass('warehouses') ?>"
+           id="nav-warehouses">
+            <span class="nav-icon"><i class="bi bi-building"></i></span>
+            Warehouses
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('zones.view')): ?>
+        <a href="<?= e(APP_URL) ?>/zones.php"
+           class="sidebar-nav-item <?= activeClass('zones') ?>"
+           id="nav-zones">
+            <span class="nav-icon"><i class="bi bi-geo-alt"></i></span>
+            Zones
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('racks.view')): ?>
+        <a href="<?= e(APP_URL) ?>/racks.php"
+           class="sidebar-nav-item <?= activeClass('racks') ?>"
+           id="nav-racks">
+            <span class="nav-icon"><i class="bi bi-columns"></i></span>
+            Racks
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('shelves.view')): ?>
+        <a href="<?= e(APP_URL) ?>/shelves.php"
+           class="sidebar-nav-item <?= activeClass('shelves') ?>"
+           id="nav-shelves">
+            <span class="nav-icon"><i class="bi bi-layout-three-columns"></i></span>
+            Shelves
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('bins.view')): ?>
+        <a href="<?= e(APP_URL) ?>/bins.php"
+           class="sidebar-nav-item <?= activeClass('bins') ?>"
+           id="nav-bins">
+            <span class="nav-icon"><i class="bi bi-box"></i></span>
+            Bins
+        </a>
+        <?php endif; ?>
+
         <div class="nav-section-title">System</div>
 
         <a href="#"
