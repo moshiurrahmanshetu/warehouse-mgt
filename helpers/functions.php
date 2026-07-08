@@ -22,13 +22,7 @@ function sanitize(string $input): string
     return trim(strip_tags($input));
 }
 
-/**
- * Cast to integer safely.
- */
-function intVal(mixed $value): int
-{
-    return (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-}
+
 
 // ─── CSRF ─────────────────────────────────────────────────────────────────────
 
