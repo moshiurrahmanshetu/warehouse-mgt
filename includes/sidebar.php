@@ -101,6 +101,16 @@ if ($user) {
         </a>
         <?php endif; ?>
 
+        <?php if(hasPermission('suppliers.view')): ?>
+        <div class="nav-section-title">Master Data</div>
+        <a href="<?= e(APP_URL) ?>/suppliers.php"
+           class="sidebar-nav-item <?= activeClass('suppliers') ?>"
+           id="nav-suppliers">
+            <span class="nav-icon"><i class="bi bi-truck"></i></span>
+            Suppliers
+        </a>
+        <?php endif; ?>
+
         <div class="nav-section-title">System</div>
 
         <a href="#"

@@ -337,3 +337,92 @@ function formatBytes(int $bytes, int $precision = 2): string
     $pow   = min($pow, count($units) - 1);
     return round($bytes / (1024 ** $pow), $precision) . ' ' . $units[$pow];
 }
+
+// ─── Phase 03 Reusable Helpers ────────────────────────────────────────────────
+
+/**
+ * Sequence-safe code generator.
+ * Uses the `system_sequences` table with an atomic update to ensure uniqueness.
+ */
+function generateSequenceCode(string $seqName, string $prefix, int $padLength = 6): string
+{
+    $db = Database::getInstance();
+    $db->beginTransaction();
+    try {
+        // Lock the row for update
+        $row = $db->fetchOne("SELECT next_val FROM system_sequences WHERE seq_name = :name FOR UPDATE", [':name' => $seqName]);
+        if (!$row) {
+            $db->execute("INSERT INTO system_sequences (seq_name, next_val) VALUES (:name, 2)", [':name' => $seqName]);
+            $nextVal = 1;
+        } else {
+            $nextVal = (int) $row['next_val'];
+            $db->execute("UPDATE system_sequences SET next_val = next_val + 1 WHERE seq_name = :name", [':name' => $seqName]);
+        }
+        $db->commit();
+        return $prefix . str_pad((string)$nextVal, $padLength, '0', STR_PAD_LEFT);
+    } catch (Exception $e) {
+        $db->rollBack();
+        throw $e;
+    }
+}
+
+/**
+ * Render Bootstrap 5 reusable pagination.
+ */
+function renderPagination(int $totalRecords, int $limit, int $currentPage, string $baseUrl = ''): string
+{
+    if ($totalRecords <= $limit) return '';
+    $totalPages = ceil($totalRecords / $limit);
+    $currentPage = max(1, min($currentPage, $totalPages));
+    
+    // Maintain existing query params
+    $queryParams = $_GET;
+    
+    $html = '<nav aria-label="Page navigation"><ul class="pagination pagination-sm justify-content-center">';
+    
+    // Prev
+    if ($currentPage > 1) {
+        $queryParams['page'] = $currentPage - 1;
+        $url = $baseUrl . '?' . http_build_query($queryParams);
+        $html .= '<li class="page-item"><a class="page-link" href="'.e($url).'">Previous</a></li>';
+    } else {
+        $html .= '<li class="page-item disabled"><a class="page-link">Previous</a></li>';
+    }
+    
+    // Pages
+    for ($i = max(1, $currentPage - 2); $i <= min($totalPages, $currentPage + 2); $i++) {
+        $queryParams['page'] = $i;
+        $url = $baseUrl . '?' . http_build_query($queryParams);
+        $active = ($i === $currentPage) ? 'active' : '';
+        $html .= '<li class="page-item '.$active.'"><a class="page-link" href="'.e($url).'">'.$i.'</a></li>';
+    }
+    
+    // Next
+    if ($currentPage < $totalPages) {
+        $queryParams['page'] = $currentPage + 1;
+        $url = $baseUrl . '?' . http_build_query($queryParams);
+        $html .= '<li class="page-item"><a class="page-link" href="'.e($url).'">Next</a></li>';
+    } else {
+        $html .= '<li class="page-item disabled"><a class="page-link">Next</a></li>';
+    }
+    
+    $html .= '</ul></nav>';
+    return $html;
+}
+
+/**
+ * Reusable CSV Export Helper.
+ */
+function exportCsv(string $filename, array $headers, array $data): void
+{
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $output = fopen('php://output', 'w');
+    fputcsv($output, $headers);
+    foreach ($data as $row) {
+        fputcsv($output, $row);
+    }
+    fclose($output);
+    exit;
+}
+
