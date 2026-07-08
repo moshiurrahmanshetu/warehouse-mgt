@@ -101,13 +101,25 @@ if ($user) {
         </a>
         <?php endif; ?>
 
-        <?php if(hasPermission('suppliers.view')): ?>
+        <?php if(hasPermission('suppliers.view') || hasPermission('customers.view')): ?>
         <div class="nav-section-title">Master Data</div>
+        <?php endif; ?>
+
+        <?php if(hasPermission('suppliers.view')): ?>
         <a href="<?= e(APP_URL) ?>/suppliers.php"
            class="sidebar-nav-item <?= activeClass('suppliers') ?>"
            id="nav-suppliers">
             <span class="nav-icon"><i class="bi bi-truck"></i></span>
             Suppliers
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('customers.view')): ?>
+        <a href="<?= e(APP_URL) ?>/customers.php"
+           class="sidebar-nav-item <?= activeClass('customers') ?>"
+           id="nav-customers">
+            <span class="nav-icon"><i class="bi bi-people"></i></span>
+            Customers
         </a>
         <?php endif; ?>
 
