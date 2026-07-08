@@ -57,13 +57,13 @@ class DashboardController
      */
     private function getRecentLogs(int $limit = 10): array
     {
+        $limit = max(1, (int) $limit);
         return $this->db->fetchAll(
             "SELECT al.*, u.name AS user_name
              FROM activity_logs al
              LEFT JOIN users u ON u.id = al.user_id
              ORDER BY al.created_at DESC
-             LIMIT :limit",
-            [':limit' => $limit]
+             LIMIT {$limit}"
         );
     }
 }

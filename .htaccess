@@ -1,0 +1,51 @@
+# Apache URL Rewrite Rules
+# Warehouse Management System
+
+Options -Indexes
+Options -MultiViews
+
+# ─── Security Headers ────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ─── Protect Sensitive Directories ───────────────────────────────────────────
+<FilesMatch "\.(sql|log|env|json|lock|md|gitignore)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block direct access to PHP files in non-public directories
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /warehouse-mgt/
+
+    # Block direct access to config/, controllers/, models/, middleware/, helpers/
+    RewriteRule ^(config|controllers|models|middleware|helpers|includes|views|database|logs|uploads)/.*\.php$ - [F,L]
+
+    # Block access to hidden files (e.g. .htaccess, .git)
+    RewriteRule ^\.  - [F,L]
+
+    # Redirect trailing slashes (optional)
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule ^(.*)/$ /$1 [R=301,L]
+</IfModule>
+
+# ─── Deny access to logs, uploads directly ───────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteRule ^logs/     - [F,L]
+</IfModule>
+
+# ─── PHP Settings ────────────────────────────────────────────────────────────
+<IfModule mod_php.c>
+    php_flag expose_php Off
+</IfModule>
+
+# ─── Error Documents ─────────────────────────────────────────────────────────
+ErrorDocument 404 /warehouse-mgt/404.php
+ErrorDocument 500 /warehouse-mgt/500.php
+ErrorDocument 403 /warehouse-mgt/404.php
