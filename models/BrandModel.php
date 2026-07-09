@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class BrandModel extends BaseModel
 {
     protected string $table = 'brands';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['brand_code', 'brand_name', 'description', 'website'];
 
     public function create(array $data): int
@@ -17,25 +18,25 @@ class BrandModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_brand', 'brand', "Updated Brand ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_brand', 'brand', "Deleted Brand ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_brand', 'brand', "Restored Brand ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_brand', 'brand', "Toggled Status for Brand ID $id", $id);

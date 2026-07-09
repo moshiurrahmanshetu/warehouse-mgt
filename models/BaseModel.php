@@ -13,6 +13,12 @@ abstract class BaseModel
     protected string $table;
     protected string $primaryKey = 'id';
 
+    /**
+     * Set to false in child models whose table has no 'created_by' column.
+     * When true, BaseModel::insert() appends created_by = current session user.
+     */
+    protected bool $useCreatedBy = true;
+
     public function __construct()
     {
         $this->db = Database::getInstance();
@@ -66,7 +72,10 @@ abstract class BaseModel
 
     protected function insert(array $data): int
     {
-        $data['created_by'] = $_SESSION['user_id'] ?? null;
+        // Only inject created_by if the table has that column
+        if ($this->useCreatedBy && !array_key_exists('created_by', $data)) {
+            $data['created_by'] = $_SESSION['user_id'] ?? null;
+        }
         $fields = array_keys($data);
         $placeholders = array_map(fn($f) => ':' . $f, $fields);
         $sql = "INSERT INTO `{$this->table}` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
@@ -86,6 +95,58 @@ abstract class BaseModel
         }
         $sql = "UPDATE `{$this->table}` SET " . implode(', ', $sets) . " WHERE `{$this->primaryKey}` = :id";
         $this->db->execute($sql, $params);
+    }
+
+    // ---------------------------------------------------------------
+    // Standard public CRUD API (inherited by all child models)
+    // ---------------------------------------------------------------
+
+    /**
+     * Insert a new row and return its auto-increment ID.
+     * Child models may override to add validation / activity logging.
+     */
+    public function create(array $data): int
+    {
+        return $this->insert($data);
+    }
+
+    /**
+     * Update an existing row by primary key.
+     * Returns true (always, for compatibility with overriding models).
+     * Child models may override to add validation / activity logging.
+     */
+    public function update(int $id, array $data): bool
+    {
+        $this->updateById($id, $data);
+        return true;
+    }
+
+    /**
+     * Soft-delete: sets deleted_at = NOW().
+     */
+    public function softDelete(int $id): bool
+    {
+        $this->delete($id);
+        return true;
+    }
+
+    /**
+     * Restore a soft-deleted row: sets deleted_at = NULL.
+     */
+    public function softRestore(int $id): bool
+    {
+        $this->restore($id);
+        return true;
+    }
+
+    /**
+     * Toggle the is_active / status column and log it.
+     * Child models should override when using is_active (bool) rather than status (enum).
+     */
+    public function toggleStatusLog(int $id): bool
+    {
+        $this->toggleStatus($id);
+        return true;
     }
 
     private function buildQuery(string $select, array $filters, bool $includeDeleted): array

@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class ProductTagModel extends BaseModel
 {
     protected string $table = 'product_tags';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['tag_code', 'tag_name'];
 
     public function create(array $data): int
@@ -17,25 +18,25 @@ class ProductTagModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_product_tag', 'tag', "Updated Tag ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_product_tag', 'tag', "Deleted Tag ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_product_tag', 'tag', "Restored Tag ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_product_tag', 'tag', "Toggled Status for Tag ID $id", $id);

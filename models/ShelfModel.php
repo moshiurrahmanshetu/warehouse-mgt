@@ -1,12 +1,15 @@
 <?php
 defined('BASEPATH') || define('BASEPATH', dirname(__DIR__));
-class ShelfModel {
-    private Database $db;
-    public function __construct() { $this->db = Database::getInstance(); }
-    public function getAll(): array {
+require_once __DIR__ . '/BaseModel.php';
+class ShelfModel extends BaseModel
+{
+    protected string $table = 'shelves';
+    protected string $primaryKey = 'id';
+    
+    public function getAll(array $filters = [], int $limit = 0, int $offset = 0, bool $includeDeleted = false): array {
         return $this->db->fetchAll("SELECT * FROM warehouse_shelves WHERE deleted_at IS NULL ORDER BY id DESC");
     }
-    public function findById(int $id): array|false {
+    public function findById(int $id, bool $includeDeleted = false): array|false {
         return $this->db->fetchOne("SELECT * FROM warehouse_shelves WHERE id = :id AND deleted_at IS NULL", [':id' => $id]);
     }
     public function codeExists(string $code, ?int $excludeId = null): bool {
@@ -26,7 +29,7 @@ class ShelfModel {
         logActivity('create_warehouse_shelves', 'warehouse', "Created Shelf ID $id");
         return $id;
     }
-    public function update(int $id, array $data): void {
+    public function update(int $id, array $data): bool {
         $sets = [];
         $params = [':id' => $id];
         foreach ($data as $k => $v) { $sets[] = "$k = :$k"; $params[':'.$k] = $v; }
@@ -37,6 +40,15 @@ class ShelfModel {
     public function delete(int $id): void {
         $this->db->execute("UPDATE warehouse_shelves SET deleted_at = NOW() WHERE id = :id", [':id' => $id]);
         logActivity('delete_warehouse_shelves', 'warehouse', "Deleted Shelf ID $id");
+    }
+    public function softDelete(int $id): bool {
+        $this->delete($id);
+        return true;
+    }
+    public function softRestore(int $id): bool {
+        $this->db->execute("UPDATE warehouse_shelves SET deleted_at = NULL WHERE id = :id", [':id' => $id]);
+        logActivity('restore_warehouse_shelves', 'warehouse', "Restored Shelf ID $id");
+        return true;
     }
     public function getAllParents(): array {
         return $this->db->fetchAll("SELECT id, rack_name AS name FROM warehouse_racks WHERE status = 'active' AND deleted_at IS NULL ORDER BY rack_name");

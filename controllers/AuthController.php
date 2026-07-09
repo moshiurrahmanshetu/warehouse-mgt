@@ -93,7 +93,7 @@ class AuthController
         $this->userModel->updateLastLogin((int) $user['id'], getClientIp());
 
         // Log activity
-        logActivity('login', 'auth', 'User logged in: ' . $user['email']);
+        logActivity('Login', 'auth', 'User logged in: ' . $user['email']);
 
         flashMessage('success', 'Welcome back, ' . e($user['name']) . '!');
         redirect(APP_URL . '/dashboard.php');
@@ -105,7 +105,7 @@ class AuthController
     public function logout(): void
     {
         if (isLoggedIn()) {
-            logActivity('logout', 'auth', 'User logged out: ' . ($_SESSION['user']['email'] ?? ''));
+            logActivity('Logout', 'auth', 'User logged out: ' . ($_SESSION['user']['email'] ?? ''));
         }
 
         session_unset();

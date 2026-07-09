@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class UnitModel extends BaseModel
 {
     protected string $table = 'units';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['unit_code', 'unit_name', 'short_name', 'unit_type'];
 
     public function create(array $data): int
@@ -17,25 +18,25 @@ class UnitModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_unit', 'unit', "Updated Unit ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_unit', 'unit', "Deleted Unit ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_unit', 'unit', "Restored Unit ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_unit', 'unit', "Toggled Status for Unit ID $id", $id);

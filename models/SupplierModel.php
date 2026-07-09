@@ -5,15 +5,13 @@
  */
 
 defined('BASEPATH') || define('BASEPATH', dirname(__DIR__));
+require_once __DIR__ . '/BaseModel.php';
 
-class SupplierModel
+class SupplierModel extends BaseModel
 {
-    private Database $db;
-
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-    }
+    protected string $table = 'suppliers';
+    protected string $primaryKey = 'id';
+    
 
     /**
      * Get all suppliers with optional filtering, search, and pagination.
@@ -149,7 +147,7 @@ class SupplierModel
     /**
      * Update supplier.
      */
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $sets = [];
         $params = [':id' => $id];
@@ -180,6 +178,18 @@ class SupplierModel
     {
         $this->db->execute("UPDATE suppliers SET deleted_at = NULL WHERE id = :id", [':id' => $id]);
         logActivity('restore_supplier', 'supplier', "Restored Supplier ID $id");
+    }
+
+    public function softDelete(int $id): bool
+    {
+        $this->delete($id);
+        return true;
+    }
+
+    public function softRestore(int $id): bool
+    {
+        $this->restore($id);
+        return true;
     }
 
     /**

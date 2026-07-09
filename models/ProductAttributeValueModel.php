@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class ProductAttributeValueModel extends BaseModel
 {
     protected string $table = 'product_attribute_values';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['value'];
 
     public function getAllByAttribute(int $attributeId, array $filters = [], int $limit = 0, int $offset = 0, bool $includeDeleted = false): array

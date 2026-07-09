@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class CategoryModel extends BaseModel
 {
     protected string $table = 'categories';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['category_code', 'category_name', 'description'];
 
     public function create(array $data): int
@@ -17,25 +18,25 @@ class CategoryModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_category', 'category', "Updated Category ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_category', 'category', "Deleted Category ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_category', 'category', "Restored Category ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_category', 'category', "Toggled Status for Category ID $id", $id);

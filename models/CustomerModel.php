@@ -5,15 +5,13 @@
  */
 
 defined('BASEPATH') || define('BASEPATH', dirname(__DIR__));
+require_once __DIR__ . '/BaseModel.php';
 
-class CustomerModel
+class CustomerModel extends BaseModel
 {
-    private Database $db;
-
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-    }
+    protected string $table = 'customers';
+    protected string $primaryKey = 'id';
+    
 
     /**
      * Get all customers with optional filtering, search, and pagination.
@@ -190,7 +188,7 @@ class CustomerModel
     /**
      * Update an existing customer.
      */
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $sets   = [];
         $params = [':id' => $id];
@@ -221,6 +219,18 @@ class CustomerModel
     {
         $this->db->execute("UPDATE customers SET deleted_at = NULL WHERE id = :id", [':id' => $id]);
         logActivity('restore_customer', 'customer', "Restored Customer ID $id", $id);
+    }
+
+    public function softDelete(int $id): bool
+    {
+        $this->delete($id);
+        return true;
+    }
+
+    public function softRestore(int $id): bool
+    {
+        $this->restore($id);
+        return true;
     }
 
     /**

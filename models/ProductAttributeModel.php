@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class ProductAttributeModel extends BaseModel
 {
     protected string $table = 'product_attributes';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['attribute_code', 'attribute_name'];
 
     public function create(array $data): int
@@ -17,25 +18,25 @@ class ProductAttributeModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_attribute', 'attribute', "Updated Attribute ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_attribute', 'attribute', "Deleted Attribute ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_attribute', 'attribute', "Restored Attribute ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_attribute', 'attribute', "Toggled Status for Attribute ID $id", $id);

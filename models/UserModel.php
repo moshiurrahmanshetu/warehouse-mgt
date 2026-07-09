@@ -3,21 +3,31 @@
  * User Model
  * Warehouse Management System
  */
-
 defined('BASEPATH') || define('BASEPATH', dirname(__DIR__));
+require_once __DIR__ . '/BaseModel.php';
 
-class UserModel
+class UserModel extends BaseModel
 {
-    private Database $db;
+    protected string $table = 'users';
+    protected string $primaryKey = 'id';
+    protected bool $useCreatedBy = false;
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
+        parent::__construct('users');
+        $this->searchableFields = ['name', 'email', 'phone'];
     }
 
-    /**
-     * Find a user by their email address.
-     */
+    public function create(array $data): int
+    {
+        return parent::create($data);
+    }
+
+    public function softRestore(int $id): bool
+    {
+        return parent::softRestore($id);
+    }
+
     public function findByEmail(string $email): array|false
     {
         return $this->db->fetchOne(
@@ -26,21 +36,15 @@ class UserModel
         );
     }
 
-    /**
-     * Find a user by their ID.
-     */
-    public function findById(int $id): array|false
+    public function findById(int $id, bool $includeDeleted = false): array|false
     {
         return $this->db->fetchOne(
-            "SELECT id, name, email, phone, avatar, status, last_login_at, created_at
+            "SELECT id, name, email, phone, avatar, status, is_active, last_login_at, last_login, last_activity, created_at, deleted_at
              FROM users WHERE id = :id LIMIT 1",
             [':id' => $id]
         );
     }
 
-    /**
-     * Get all role slugs for a user.
-     */
     public function getRoles(int $userId): array
     {
         $rows = $this->db->fetchAll(
@@ -52,9 +56,6 @@ class UserModel
         return array_column($rows, 'slug');
     }
 
-    /**
-     * Get all permission slugs for a user (via their roles).
-     */
     public function getPermissions(int $userId): array
     {
         $rows = $this->db->fetchAll(
@@ -67,32 +68,102 @@ class UserModel
         return array_column($rows, 'slug');
     }
 
-    /**
-     * Update the user's last login timestamp and IP.
-     */
     public function updateLastLogin(int $userId, string $ip): void
     {
         $this->db->execute(
-            "UPDATE users SET last_login_at = NOW(), last_login_ip = :ip WHERE id = :id",
+            "UPDATE users SET last_login_at = NOW(), last_login = NOW(), last_login_ip = :ip WHERE id = :id",
             [':ip' => $ip, ':id' => $userId]
         );
     }
 
-    /**
-     * Get total number of active users.
-     */
     public function countActive(): int
     {
-        $row = $this->db->fetchOne("SELECT COUNT(*) AS total FROM users WHERE status = 'active'");
+        $row = $this->db->fetchOne("SELECT COUNT(*) AS total FROM users WHERE status = 'active' OR is_active = 1");
         return (int) ($row['total'] ?? 0);
     }
 
-    /**
-     * Get total number of users.
-     */
-    public function countAll(): int
+    public function emailExists(string $email, int $excludeId = 0): bool
     {
-        $row = $this->db->fetchOne("SELECT COUNT(*) AS total FROM users");
-        return (int) ($row['total'] ?? 0);
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE email = :email AND id != :id";
+        $row = $this->db->fetchOne($sql, [':email' => $email, ':id' => $excludeId]);
+        return ($row['count'] > 0);
+    }
+
+    public function syncRoles(int $userId, array $roleIds): void
+    {
+        // Check if removing last administrator role
+        if (in_array(1, $roleIds) === false) {
+            // Check if this user had admin role
+            $hadAdmin = $this->db->fetchOne("SELECT 1 FROM user_roles WHERE user_id = :uid AND role_id = 1", [':uid' => $userId]);
+            if ($hadAdmin) {
+                $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $userId]);
+                if ($adminCount['count'] < 1) {
+                    throw new Exception("Cannot remove the last active Administrator role assignment.");
+                }
+            }
+        }
+
+        $this->db->execute("DELETE FROM user_roles WHERE user_id = :user_id", [':user_id' => $userId]);
+        foreach ($roleIds as $rid) {
+            $this->db->execute(
+                "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)",
+                [':user_id' => $userId, ':role_id' => (int)$rid]
+            );
+        }
+    }
+
+    public function getUserRoles(int $userId): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT role_id FROM user_roles WHERE user_id = :user_id",
+            [':user_id' => $userId]
+        );
+        return array_column($rows, 'role_id');
+    }
+
+    public function softDelete(int $id): bool
+    {
+        $currentUserId = $_SESSION['user_id'] ?? 0;
+        if ($id === (int)$currentUserId) {
+            throw new Exception("You cannot delete your own account.");
+        }
+        
+        $roles = $this->getUserRoles($id);
+        if (in_array(1, $roles)) {
+            $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $id]);
+            if ($adminCount['count'] < 1) {
+                throw new Exception("Cannot delete the last active Administrator.");
+            }
+        }
+        
+        return parent::softDelete($id);
+    }
+
+    public function toggleStatusLog(int $id): bool
+    {
+        $currentUserId = $_SESSION['user_id'] ?? 0;
+        if ($id === (int)$currentUserId) {
+            throw new Exception("You cannot deactivate your own account.");
+        }
+        
+        $user = $this->findById($id);
+        $newStatus = ($user['is_active'] == 1) ? 0 : 1;
+        $statusStr = $newStatus ? 'active' : 'inactive';
+        
+        if ($newStatus == 0) { // Deactivating
+            $roles = $this->getUserRoles($id);
+            if (in_array(1, $roles)) {
+                $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $id]);
+                if ($adminCount['count'] < 1) {
+                    throw new Exception("Cannot deactivate the last active Administrator.");
+                }
+            }
+        }
+        
+        $res = parent::update($id, ['is_active' => $newStatus, 'status' => $statusStr]);
+        if ($res) {
+            logActivity(($newStatus ? 'Activate' : 'Deactivate'), 'users', "User: {$user['name']}");
+        }
+        return $res;
     }
 }

@@ -8,6 +8,7 @@ require_once MODEL_PATH . '/BaseModel.php';
 class CurrencyModel extends BaseModel
 {
     protected string $table = 'currencies';
+    protected string $primaryKey = 'id';
     protected array $searchColumns = ['currency_code', 'currency_name', 'currency_symbol'];
 
     public function create(array $data): int
@@ -20,7 +21,7 @@ class CurrencyModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         if (!empty($data['is_default']) && $data['is_default']) {
             $this->clearDefault($id);
@@ -29,19 +30,19 @@ class CurrencyModel extends BaseModel
         logActivity('update_currency', 'currency', "Updated Currency ID $id", $id);
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_currency', 'currency', "Deleted Currency ID $id", $id);
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_currency', 'currency', "Restored Currency ID $id", $id);
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_currency', 'currency', "Toggled Status for Currency ID $id", $id);
@@ -55,7 +56,7 @@ class CurrencyModel extends BaseModel
         return (bool)$this->db->fetchOne($sql, $params);
     }
 
-    private function clearDefault(?int $excludeId = null): void
+    private function clearDefault(?int $excludeId = null): bool
     {
         $sql = "UPDATE currencies SET is_default = 0 WHERE 1=1";
         $params = [];
