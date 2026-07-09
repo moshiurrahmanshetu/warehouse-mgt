@@ -1,6 +1,6 @@
-<?php require_once VIEW_PATH . '/includes/header.php'; require_once VIEW_PATH . '/includes/navbar.php'; ?>
+<?php require_once INCLUDE_PATH . '/header.php'; require_once INCLUDE_PATH . '/navbar.php'; ?>
 <div class="d-flex">
-    <?php require_once VIEW_PATH . '/includes/sidebar.php'; ?>
+    <?php require_once INCLUDE_PATH . '/sidebar.php'; ?>
     <main class="wms-main p-4 flex-grow-1">
         <h2>Edit Warehouse</h2>
         <?php renderFlash(); ?>
@@ -32,4 +32,4 @@
         </div>
     </main>
 </div>
-<?php require_once VIEW_PATH . '/includes/footer.php'; ?>
+<?php require_once INCLUDE_PATH . '/footer.php'; ?>

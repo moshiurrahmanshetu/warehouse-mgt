@@ -36,7 +36,7 @@ if ($user) {
 
         <div class="nav-section-title">Administration</div>
 
-        <a href="#"
+        <a href="<?= e(APP_URL) ?>/users.php"
            class="sidebar-nav-item <?= activeClass('users') ?>"
            id="nav-users">
             <span class="nav-icon"><i class="bi bi-people"></i></span>
@@ -44,7 +44,7 @@ if ($user) {
             <span class="nav-badge">Soon</span>
         </a>
 
-        <a href="#"
+        <a href="<?= e(APP_URL) ?>/roles.php"
            class="sidebar-nav-item <?= activeClass('roles') ?>"
            id="nav-roles">
             <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
@@ -123,9 +123,55 @@ if ($user) {
         </a>
         <?php endif; ?>
 
+        <?php if(hasPermission('categories.view') || hasPermission('brands.view') || hasPermission('units.view') || hasPermission('tax_rates.view') || hasPermission('currencies.view') || hasPermission('attributes.view') || hasPermission('product_tags.view')): ?>
+        <div class="nav-section-title">Product Master Data</div>
+        <?php endif; ?>
+
+        <?php if(hasPermission('categories.view')): ?>
+        <a href="<?= e(APP_URL) ?>/categories.php" class="sidebar-nav-item <?= activeClass('categories') ?>">
+            <span class="nav-icon"><i class="bi bi-diagram-3"></i></span> Categories
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('brands.view')): ?>
+        <a href="<?= e(APP_URL) ?>/brands.php" class="sidebar-nav-item <?= activeClass('brands') ?>">
+            <span class="nav-icon"><i class="bi bi-award"></i></span> Brands
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('units.view')): ?>
+        <a href="<?= e(APP_URL) ?>/units.php" class="sidebar-nav-item <?= activeClass('units') ?>">
+            <span class="nav-icon"><i class="bi bi-rulers"></i></span> Units of Measure
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('tax_rates.view')): ?>
+        <a href="<?= e(APP_URL) ?>/tax_rates.php" class="sidebar-nav-item <?= activeClass('tax_rates') ?>">
+            <span class="nav-icon"><i class="bi bi-percent"></i></span> Tax Rates
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('currencies.view')): ?>
+        <a href="<?= e(APP_URL) ?>/currencies.php" class="sidebar-nav-item <?= activeClass('currencies') ?>">
+            <span class="nav-icon"><i class="bi bi-currency-exchange"></i></span> Currencies
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('attributes.view')): ?>
+        <a href="<?= e(APP_URL) ?>/attributes.php" class="sidebar-nav-item <?= activeClass('attributes') ?>">
+            <span class="nav-icon"><i class="bi bi-sliders"></i></span> Attributes
+        </a>
+        <?php endif; ?>
+
+        <?php if(hasPermission('product_tags.view')): ?>
+        <a href="<?= e(APP_URL) ?>/product_tags.php" class="sidebar-nav-item <?= activeClass('product_tags') ?>">
+            <span class="nav-icon"><i class="bi bi-tags"></i></span> Product Tags
+        </a>
+        <?php endif; ?>
+
         <div class="nav-section-title">System</div>
 
-        <a href="#"
+        <a href="<?= e(APP_URL) ?>/activity_logs.php"
            class="sidebar-nav-item <?= activeClass('activity') ?>"
            id="nav-activity">
             <span class="nav-icon"><i class="bi bi-activity"></i></span>
@@ -133,7 +179,7 @@ if ($user) {
             <span class="nav-badge">Soon</span>
         </a>
 
-        <a href="#"
+        <a href="<?= e(APP_URL) ?>/settings.php"
            class="sidebar-nav-item <?= activeClass('settings') ?>"
            id="nav-settings">
             <span class="nav-icon"><i class="bi bi-gear"></i></span>

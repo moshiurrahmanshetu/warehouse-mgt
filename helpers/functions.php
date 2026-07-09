@@ -158,6 +158,21 @@ function hasPermission(string $permSlug): bool
     return in_array($permSlug, $perms, true);
 }
 
+/**
+ * Require a specific permission, using RoleMiddleware to handle failures.
+ */
+function requirePermission(string $permSlug): void
+{
+    if (class_exists('RoleMiddleware')) {
+        RoleMiddleware::requirePermission($permSlug);
+    } else {
+        if (!hasPermission($permSlug)) {
+            http_response_code(403);
+            die('Forbidden: You do not have the required permission.');
+        }
+    }
+}
+
 // ─── Navigation / Redirects ───────────────────────────────────────────────────
 
 /**
