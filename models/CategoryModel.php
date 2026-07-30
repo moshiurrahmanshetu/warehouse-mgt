@@ -22,24 +22,29 @@ class CategoryModel extends BaseModel
     {
         $this->updateById($id, $data);
         logActivity('update_category', 'category', "Updated Category ID $id", $id);
+    
+        return true;
     }
 
     public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_category', 'category', "Deleted Category ID $id", $id);
+        return true;
     }
 
     public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_category', 'category', "Restored Category ID $id", $id);
+        return true;
     }
 
     public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_category', 'category', "Toggled Status for Category ID $id", $id);
+        return true;
     }
 
     /** Get all active categories for parent dropdown */

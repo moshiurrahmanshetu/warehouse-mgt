@@ -160,6 +160,7 @@ class SupplierModel extends BaseModel
         $this->db->execute($sql, $params);
         
         logActivity('update_supplier', 'supplier', "Updated Supplier ID $id");
+        return true;
     }
 
     /**

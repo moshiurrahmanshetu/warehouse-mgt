@@ -22,24 +22,28 @@ class BrandModel extends BaseModel
     {
         $this->updateById($id, $data);
         logActivity('update_brand', 'brand', "Updated Brand ID $id", $id);
-    }
+    
+        return true;}
 
     public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_brand', 'brand', "Deleted Brand ID $id", $id);
+        return true;
     }
 
     public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_brand', 'brand', "Restored Brand ID $id", $id);
+        return true;    
     }
 
     public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_brand', 'brand', "Toggled Status for Brand ID $id", $id);
+        return true;
     }
 
     public function nameExists(string $name, ?int $excludeId = null): bool

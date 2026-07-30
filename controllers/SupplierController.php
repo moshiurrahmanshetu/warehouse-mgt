@@ -140,8 +140,10 @@ class SupplierController
             flashMessage('success', 'Supplier created successfully.');
         } catch (Exception $e) {
             Database::getInstance()->rollBack();
-            error_log($e->getMessage());
-            flashMessage('error', 'Failed to generate supplier code or save data.');
+
+            echo "<pre>";
+            echo $e->getMessage();
+            exit;
         }
 
         redirect('suppliers.php');

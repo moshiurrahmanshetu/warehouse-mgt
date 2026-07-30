@@ -36,7 +36,8 @@ class ShelfModel extends BaseModel
         $sql = "UPDATE warehouse_shelves SET " . implode(', ', $sets) . " WHERE id = :id";
         $this->db->execute($sql, $params);
         logActivity('update_warehouse_shelves', 'warehouse', "Updated Shelf ID $id");
-    }
+        return true;
+        }
     public function delete(int $id): void {
         $this->db->execute("UPDATE warehouse_shelves SET deleted_at = NOW() WHERE id = :id", [':id' => $id]);
         logActivity('delete_warehouse_shelves', 'warehouse', "Deleted Shelf ID $id");

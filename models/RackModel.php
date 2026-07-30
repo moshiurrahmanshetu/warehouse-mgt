@@ -36,7 +36,8 @@ class RackModel extends BaseModel
         $sql = "UPDATE warehouse_racks SET " . implode(', ', $sets) . " WHERE id = :id";
         $this->db->execute($sql, $params);
         logActivity('update_warehouse_racks', 'warehouse', "Updated Rack ID $id");
-    }
+        return true;   
+        }
     public function delete(int $id): void {
         $this->db->execute("UPDATE warehouse_racks SET deleted_at = NOW() WHERE id = :id", [':id' => $id]);
         logActivity('delete_warehouse_racks', 'warehouse', "Deleted Rack ID $id");

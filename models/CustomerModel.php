@@ -201,6 +201,7 @@ class CustomerModel extends BaseModel
         $this->db->execute($sql, $params);
 
         logActivity('update_customer', 'customer', "Updated Customer ID $id", $id);
+        return true;
     }
 
     /**

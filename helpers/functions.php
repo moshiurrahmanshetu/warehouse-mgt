@@ -362,25 +362,32 @@ function formatBytes(int $bytes, int $precision = 2): string
 function generateSequenceCode(string $seqName, string $prefix, int $padLength = 6): string
 {
     $db = Database::getInstance();
-    $db->beginTransaction();
-    try {
-        // Lock the row for update
-        $row = $db->fetchOne("SELECT next_val FROM system_sequences WHERE seq_name = :name FOR UPDATE", [':name' => $seqName]);
-        if (!$row) {
-            $db->execute("INSERT INTO system_sequences (seq_name, next_val) VALUES (:name, 2)", [':name' => $seqName]);
-            $nextVal = 1;
-        } else {
-            $nextVal = (int) $row['next_val'];
-            $db->execute("UPDATE system_sequences SET next_val = next_val + 1 WHERE seq_name = :name", [':name' => $seqName]);
-        }
-        $db->commit();
-        return $prefix . str_pad((string)$nextVal, $padLength, '0', STR_PAD_LEFT);
-    } catch (Exception $e) {
-        $db->rollBack();
-        throw $e;
-    }
-}
 
+    // Lock the row for update
+    $row = $db->fetchOne(
+        "SELECT next_val FROM system_sequences WHERE seq_name = :name FOR UPDATE",
+        [':name' => $seqName]
+    );
+
+    if (!$row) {
+        $db->execute(
+            "INSERT INTO system_sequences (seq_name, next_val) VALUES (:name, 2)",
+            [':name' => $seqName]
+        );
+        $nextVal = 1;
+    } else {
+        $nextVal = (int)$row['next_val'];
+
+        $db->execute(
+            "UPDATE system_sequences
+             SET next_val = next_val + 1
+             WHERE seq_name = :name",
+            [':name' => $seqName]
+        );
+    }
+
+    return $prefix . str_pad((string)$nextVal, $padLength, '0', STR_PAD_LEFT);
+}
 /**
  * Render Bootstrap 5 reusable pagination.
  */

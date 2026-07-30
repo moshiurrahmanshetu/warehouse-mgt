@@ -36,7 +36,8 @@ class BinModel extends BaseModel
         $sql = "UPDATE warehouse_bins SET " . implode(', ', $sets) . " WHERE id = :id";
         $this->db->execute($sql, $params);
         logActivity('update_warehouse_bins', 'warehouse', "Updated Bin ID $id");
-    }
+        return true;
+        }
     public function delete(int $id): void {
         $this->db->execute("UPDATE warehouse_bins SET deleted_at = NOW() WHERE id = :id", [':id' => $id]);
         logActivity('delete_warehouse_bins', 'warehouse', "Deleted Bin ID $id");
