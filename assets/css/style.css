@@ -307,10 +307,16 @@ body {
     top: 0;
     z-index: 900;
     gap: 16px;
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition);
+}
+
+.wms-main .wms-navbar {
+    margin-left: 0;
 }
 
 .navbar-toggle {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     width: 36px;
@@ -351,8 +357,16 @@ body {
         overflow: visible;
     }
 
+    body.sidebar-collapsed .wms-navbar {
+        margin-left: var(--sidebar-collapsed-width);
+    }
+
     body.sidebar-collapsed .wms-main {
         margin-left: var(--sidebar-collapsed-width);
+    }
+
+    body.sidebar-collapsed .wms-main .wms-navbar {
+        margin-left: 0;
     }
 
     body.sidebar-collapsed .sidebar-header {
@@ -745,7 +759,9 @@ body {
     border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
 }
-
+.card{
+    background: var(--bg-card);
+}
 .wms-table tbody td {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
