@@ -89,22 +89,138 @@ class UserModel extends BaseModel
         return ($row['count'] > 0);
     }
 
+    public function getAdminRoleId(): ?int
+    {
+        $row = $this->db->fetchOne("SELECT id FROM roles WHERE slug = 'admin' AND deleted_at IS NULL LIMIT 1");
+        return $row ? (int)$row['id'] : null;
+    }
+
+    public function isUserAdmin(int $userId): bool
+    {
+        $sql = "SELECT 1 FROM user_roles ur
+                INNER JOIN roles r ON r.id = ur.role_id
+                WHERE ur.user_id = :uid AND r.slug = 'admin' AND r.is_active = 1 AND r.deleted_at IS NULL LIMIT 1";
+        $row = $this->db->fetchOne($sql, [':uid' => $userId]);
+        return !empty($row);
+    }
+
+    public function countOtherActiveAdmins(int $excludeUserId = 0): int
+    {
+        $sql = "SELECT COUNT(DISTINCT u.id) as total
+                FROM users u
+                INNER JOIN user_roles ur ON ur.user_id = u.id
+                INNER JOIN roles r ON r.id = ur.role_id
+                WHERE r.slug = 'admin'
+                  AND r.is_active = 1
+                  AND r.deleted_at IS NULL
+                  AND (u.is_active = 1 OR u.status = 'active')
+                  AND u.deleted_at IS NULL
+                  AND u.id != :exclude_id";
+        $row = $this->db->fetchOne($sql, [':exclude_id' => $excludeUserId]);
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function validateRoleIds(array $roleIds): array
+    {
+        if (empty($roleIds)) return [];
+        $roleIds = array_values(array_unique(array_filter(array_map('intval', $roleIds))));
+        if (empty($roleIds)) return [];
+
+        $placeholders = [];
+        $params = [];
+        foreach ($roleIds as $idx => $id) {
+            $key = ":r$idx";
+            $placeholders[] = $key;
+            $params[$key] = $id;
+        }
+
+        $inClause = implode(',', $placeholders);
+        $sql = "SELECT id FROM roles WHERE id IN ($inClause) AND is_active = 1 AND deleted_at IS NULL";
+        $rows = $this->db->fetchAll($sql, $params);
+        return array_map('intval', array_column($rows, 'id'));
+    }
+
+    public function getAll(array $filters = [], int $limit = 0, int $offset = 0, bool $includeDeleted = false): array
+    {
+        $params = [];
+        $where = [];
+
+        if (!$includeDeleted) {
+            $where[] = "u.deleted_at IS NULL";
+        } elseif (!empty($filters['only_deleted'])) {
+            $where[] = "u.deleted_at IS NOT NULL";
+        }
+
+        if (!empty($filters['search'])) {
+            $where[] = "(u.name LIKE :s1 OR u.email LIKE :s2 OR u.phone LIKE :s3)";
+            $params[':s1'] = '%' . $filters['search'] . '%';
+            $params[':s2'] = '%' . $filters['search'] . '%';
+            $params[':s3'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['status'])) {
+            $where[] = "(u.status = :status OR u.is_active = :is_active)";
+            $params[':status'] = $filters['status'];
+            $params[':is_active'] = ($filters['status'] === 'active') ? 1 : 0;
+        }
+
+        $whereSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $sql = "SELECT u.*, 
+                       GROUP_CONCAT(DISTINCT r.name ORDER BY r.name SEPARATOR ', ') AS role_names,
+                       GROUP_CONCAT(DISTINCT r.slug ORDER BY r.slug SEPARATOR ',') AS role_slugs
+                FROM users u
+                LEFT JOIN user_roles ur ON ur.user_id = u.id
+                LEFT JOIN roles r ON r.id = ur.role_id AND r.deleted_at IS NULL
+                $whereSql
+                GROUP BY u.id
+                ORDER BY u.id DESC";
+
+        if ($limit > 0) {
+            $sql .= " LIMIT $limit OFFSET $offset";
+        }
+
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    public function getRolesDisplay(int $userId): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT r.name FROM roles r
+             INNER JOIN user_roles ur ON ur.role_id = r.id
+             WHERE ur.user_id = :uid AND r.is_active = 1 AND r.deleted_at IS NULL ORDER BY r.name",
+            [':uid' => $userId]
+        );
+        return array_column($rows, 'name');
+    }
+
     public function syncRoles(int $userId, array $roleIds): void
     {
-        // Check if removing last administrator role
-        if (in_array(1, $roleIds) === false) {
-            // Check if this user had admin role
-            $hadAdmin = $this->db->fetchOne("SELECT 1 FROM user_roles WHERE user_id = :uid AND role_id = 1", [':uid' => $userId]);
-            if ($hadAdmin) {
-                $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $userId]);
-                if ($adminCount['count'] < 1) {
+        $roleIds = array_values(array_unique(array_filter(array_map('intval', $roleIds))));
+
+        if (empty($roleIds)) {
+            throw new Exception("A user must have at least one role assigned.");
+        }
+
+        $validRoleIds = $this->validateRoleIds($roleIds);
+        if (count($validRoleIds) !== count($roleIds)) {
+            throw new Exception("One or more selected roles are invalid or inactive.");
+        }
+
+        // Administrator protection check: only if target user is currently an Administrator
+        if ($this->isUserAdmin($userId)) {
+            $adminRoleId = $this->getAdminRoleId();
+            $willKeepAdmin = ($adminRoleId !== null && in_array($adminRoleId, $validRoleIds, true));
+            if (!$willKeepAdmin) {
+                $otherAdmins = $this->countOtherActiveAdmins($userId);
+                if ($otherAdmins < 1) {
                     throw new Exception("Cannot remove the last active Administrator role assignment.");
                 }
             }
         }
 
         $this->db->execute("DELETE FROM user_roles WHERE user_id = :user_id", [':user_id' => $userId]);
-        foreach ($roleIds as $rid) {
+        foreach ($validRoleIds as $rid) {
             $this->db->execute(
                 "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)",
                 [':user_id' => $userId, ':role_id' => (int)$rid]
@@ -118,7 +234,7 @@ class UserModel extends BaseModel
             "SELECT role_id FROM user_roles WHERE user_id = :user_id",
             [':user_id' => $userId]
         );
-        return array_column($rows, 'role_id');
+        return array_map('intval', array_column($rows, 'role_id'));
     }
 
     public function softDelete(int $id): bool
@@ -128,10 +244,9 @@ class UserModel extends BaseModel
             throw new Exception("You cannot delete your own account.");
         }
         
-        $roles = $this->getUserRoles($id);
-        if (in_array(1, $roles)) {
-            $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $id]);
-            if ($adminCount['count'] < 1) {
+        if ($this->isUserAdmin($id)) {
+            $otherAdmins = $this->countOtherActiveAdmins($id);
+            if ($otherAdmins < 1) {
                 throw new Exception("Cannot delete the last active Administrator.");
             }
         }
@@ -147,14 +262,17 @@ class UserModel extends BaseModel
         }
         
         $user = $this->findById($id);
+        if (!$user) {
+            throw new Exception("User not found.");
+        }
+
         $newStatus = ($user['is_active'] == 1) ? 0 : 1;
         $statusStr = $newStatus ? 'active' : 'inactive';
         
         if ($newStatus == 0) { // Deactivating
-            $roles = $this->getUserRoles($id);
-            if (in_array(1, $roles)) {
-                $adminCount = $this->db->fetchOne("SELECT COUNT(DISTINCT user_id) as count FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE role_id = 1 AND u.is_active = 1 AND u.deleted_at IS NULL AND u.id != :uid", [':uid' => $id]);
-                if ($adminCount['count'] < 1) {
+            if ($this->isUserAdmin($id)) {
+                $otherAdmins = $this->countOtherActiveAdmins($id);
+                if ($otherAdmins < 1) {
                     throw new Exception("Cannot deactivate the last active Administrator.");
                 }
             }

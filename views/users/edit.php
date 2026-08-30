@@ -74,16 +74,17 @@
 
                         <!-- Roles -->
                         <div class="col-md-6">
-                            <label class="form-label">Assign Roles</label>
-                            <select name="roles[]" class="form-select" multiple size="4">
+                            <label class="form-label">Role <span class="text-danger">*</span></label>
+                            <select name="role_id" class="form-select" required id="userRoleSelect">
+                                <option value="">-- Select Role --</option>
                                 <?php foreach ($roles as $role): ?>
                                     <option value="<?= (int)$role['id'] ?>"
-                                        <?= in_array($role['id'], $userRoles) ? 'selected' : '' ?>>
+                                        <?= in_array((int)$role['id'], array_map('intval', $userRoles), true) ? 'selected' : '' ?>>
                                         <?= e($role['name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text">Hold Ctrl / Cmd to select multiple.</div>
+                            <div class="form-text">Select the system role to assign to this user.</div>
                         </div>
 
                         <!-- Status — only shown when editing someone else -->

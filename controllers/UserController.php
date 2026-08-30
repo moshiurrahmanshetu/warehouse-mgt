@@ -35,6 +35,20 @@ class UserController
         require_once VIEW_PATH . '/users/index.php';
     }
 
+    public function view(): void
+    {
+        requirePermission('users.view');
+        $id = (int)($_GET['id'] ?? 0);
+        $user = $this->findOrAbort($id);
+        $userModel = $this->model;
+        require_once VIEW_PATH . '/users/view.php';
+    }
+
+    public function show(): void
+    {
+        $this->view();
+    }
+
     public function create(): void
     {
         requirePermission('users.manage');
@@ -54,10 +68,26 @@ class UserController
         $phone = sanitize($_POST['phone'] ?? '');
         $password = $_POST['password'] ?? '';
         $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $roleIds = $_POST['roles'] ?? [];
+        
+        $roleInput = $_POST['role_id'] ?? $_POST['roles'] ?? [];
+        if (!is_array($roleInput)) {
+            $roleInput = !empty($roleInput) ? [$roleInput] : [];
+        }
+        $roleIds = array_values(array_unique(array_filter(array_map('intval', $roleInput))));
 
         if (empty($name) || empty($email) || empty($password)) {
             flashMessage('error', 'Name, Email, and Password are required.');
+            redirect('users.php?action=create');
+        }
+
+        if (empty($roleIds)) {
+            flashMessage('error', 'Please select at least one role for the user.');
+            redirect('users.php?action=create');
+        }
+
+        $validRoleIds = $this->model->validateRoleIds($roleIds);
+        if (count($validRoleIds) !== count($roleIds)) {
+            flashMessage('error', 'One or more selected roles are invalid or inactive.');
             redirect('users.php?action=create');
         }
 
@@ -82,7 +112,7 @@ class UserController
                 'status' => $isActive ? 'active' : 'inactive'
             ]);
             
-            $this->model->syncRoles($userId, $roleIds);
+            $this->model->syncRoles($userId, $validRoleIds);
             
             logActivity('Create', 'users', "Created user: {$name}");
             
@@ -90,7 +120,8 @@ class UserController
             flashMessage('success', 'User created successfully.');
         } catch (Exception $e) {
             $db->rollBack();
-            flashMessage('error', 'Failed to create user.');
+            flashMessage('error', $e->getMessage() ?: 'Failed to create user.');
+            redirect('users.php?action=create');
         }
 
         redirect('users.php');
@@ -122,11 +153,27 @@ class UserController
         $email = sanitize($_POST['email'] ?? '');
         $phone = sanitize($_POST['phone'] ?? '');
         $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $roleIds = $_POST['roles'] ?? [];
         $password = $_POST['password'] ?? '';
+
+        $roleInput = $_POST['role_id'] ?? $_POST['roles'] ?? [];
+        if (!is_array($roleInput)) {
+            $roleInput = !empty($roleInput) ? [$roleInput] : [];
+        }
+        $roleIds = array_values(array_unique(array_filter(array_map('intval', $roleInput))));
 
         if (empty($name) || empty($email)) {
             flashMessage('error', 'Name and Email are required.');
+            redirect("users.php?action=edit&id=$id");
+        }
+
+        if (empty($roleIds)) {
+            flashMessage('error', 'Please select at least one role for the user.');
+            redirect("users.php?action=edit&id=$id");
+        }
+
+        $validRoleIds = $this->model->validateRoleIds($roleIds);
+        if (count($validRoleIds) !== count($roleIds)) {
+            flashMessage('error', 'One or more selected roles are invalid or inactive.');
             redirect("users.php?action=edit&id=$id");
         }
 
@@ -164,8 +211,8 @@ class UserController
             
             // Handle role changes
             $currentRoles = $this->model->getUserRoles($id);
-            if (array_diff($currentRoles, $roleIds) || array_diff($roleIds, $currentRoles)) {
-                $this->model->syncRoles($id, $roleIds);
+            if (array_diff($currentRoles, $validRoleIds) || array_diff($validRoleIds, $currentRoles)) {
+                $this->model->syncRoles($id, $validRoleIds);
                 logActivity('Role Assignment', 'users', "Updated roles for user: {$name}");
             }
             
@@ -180,6 +227,7 @@ class UserController
         } catch (Exception $e) {
             $db->rollBack();
             flashMessage('error', $e->getMessage() ?: 'Failed to update user.');
+            redirect("users.php?action=edit&id=$id");
         }
 
         redirect('users.php');

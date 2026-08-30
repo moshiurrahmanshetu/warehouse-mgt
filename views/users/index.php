@@ -53,6 +53,7 @@
                                 <th style="width:48px">Avatar</th>
                                 <th>Full Name</th>
                                 <th>Email</th>
+                                <th>Role</th>
                                 <th>Phone</th>
                                 <th>Status</th>
                                 <th>Last Login</th>
@@ -63,7 +64,7 @@
                         <tbody>
                             <?php if (empty($items)): ?>
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">No users found.</td>
+                                    <td colspan="9" class="text-center py-4 text-muted">No users found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($items as $row): ?>
@@ -93,6 +94,23 @@
 
                                     <!-- Email -->
                                     <td><?= e($row['email']) ?></td>
+
+                                    <!-- Role -->
+                                    <td>
+                                        <?php if (!empty($row['role_names'])): ?>
+                                            <?php 
+                                                $roleList = explode(', ', $row['role_names']);
+                                                $slugList = !empty($row['role_slugs']) ? explode(',', $row['role_slugs']) : [];
+                                                foreach ($roleList as $idx => $rName): 
+                                                    $slug = $slugList[$idx] ?? '';
+                                                    $badgeClass = ($slug === 'admin') ? 'bg-primary' : (($slug === 'manager') ? 'bg-info' : 'bg-secondary');
+                                            ?>
+                                                <span class="badge <?= $badgeClass ?>"><?= e($rName) ?></span>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
 
                                     <!-- Phone -->
                                     <td><?= e($row['phone'] ?? '—') ?></td>

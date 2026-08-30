@@ -58,6 +58,19 @@
                             <dt class="col-sm-3">Email</dt>
                             <dd class="col-sm-9"><?= e($user['email']) ?></dd>
 
+                            <dt class="col-sm-3">Roles</dt>
+                            <dd class="col-sm-9">
+                                <?php
+                                    $userRoleNames = $userModel->getRolesDisplay((int)$user['id']);
+                                    if (!empty($userRoleNames)):
+                                        foreach ($userRoleNames as $rn):
+                                ?>
+                                    <span class="badge bg-primary me-1"><?= e($rn) ?></span>
+                                <?php endforeach; else: ?>
+                                    <span class="text-muted">No roles assigned</span>
+                                <?php endif; ?>
+                            </dd>
+
                             <dt class="col-sm-3">Phone</dt>
                             <dd class="col-sm-9"><?= e($user['phone'] ?? '—') ?></dd>
 
