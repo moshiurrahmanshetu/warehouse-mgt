@@ -14,9 +14,9 @@ if ($user) {
 }
 ?>
 <header class="wms-navbar" id="wmsNavbar">
-    <!-- Mobile sidebar toggle -->
-    <button class="navbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-        <i class="bi bi-list"></i>
+    <!-- Sidebar toggle (Desktop: Collapse/Expand, Mobile: Drawer) -->
+    <button class="navbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" title="Toggle Sidebar">
+        <i class="bi bi-list fs-5"></i>
     </button>
 
     <!-- Search -->

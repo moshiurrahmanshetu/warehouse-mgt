@@ -18,4 +18,9 @@
     </script>
 </head>
 <body class="authenticated">
+<script>
+    if (localStorage.getItem('warehouse_sidebar_collapsed') === '1' && window.innerWidth >= 992) {
+        document.body.classList.add('sidebar-collapsed');
+    }
+</script>
 <div class="wms-wrapper">

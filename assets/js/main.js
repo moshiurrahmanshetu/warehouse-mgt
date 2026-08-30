@@ -5,25 +5,80 @@
 (function () {
     'use strict';
 
-    // ── Sidebar Toggle (mobile) ────────────────────────────────────────────
-    const sidebarToggle  = document.getElementById('sidebarToggle');
-    const sidebar        = document.getElementById('wmsSidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    // ── Sidebar Toggle & Collapse ──────────────────────────────────────────
+    const sidebarToggle      = document.getElementById('sidebarToggle');
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    const sidebar            = document.getElementById('wmsSidebar');
+    const sidebarOverlay     = document.getElementById('sidebarOverlay');
+    const STORAGE_KEY        = 'warehouse_sidebar_collapsed';
 
-    function openSidebar() {
+    function isMobile() {
+        return window.innerWidth < 992;
+    }
+
+    function openMobileSidebar() {
         sidebar?.classList.add('open');
         sidebarOverlay?.classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeSidebar() {
+    function closeMobileSidebar() {
         sidebar?.classList.remove('open');
         sidebarOverlay?.classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    sidebarToggle?.addEventListener('click', openSidebar);
-    sidebarOverlay?.addEventListener('click', closeSidebar);
+    function toggleDesktopSidebar() {
+        const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+        try {
+            localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+        } catch (e) {}
+    }
+
+    // Initialize state from localStorage on desktop
+    if (!isMobile()) {
+        try {
+            if (localStorage.getItem(STORAGE_KEY) === '1') {
+                document.body.classList.add('sidebar-collapsed');
+            } else if (localStorage.getItem(STORAGE_KEY) === '0') {
+                document.body.classList.remove('sidebar-collapsed');
+            }
+        } catch (e) {}
+    }
+
+    sidebarToggle?.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (isMobile()) {
+            if (sidebar?.classList.contains('open')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        } else {
+            toggleDesktopSidebar();
+        }
+    });
+
+    sidebarCollapseBtn?.addEventListener('click', function (e) {
+        e.preventDefault();
+        toggleDesktopSidebar();
+    });
+
+    sidebarOverlay?.addEventListener('click', closeMobileSidebar);
+
+    // Handle screen resize
+    window.addEventListener('resize', function () {
+        if (!isMobile()) {
+            closeMobileSidebar();
+            try {
+                if (localStorage.getItem(STORAGE_KEY) === '1') {
+                    document.body.classList.add('sidebar-collapsed');
+                } else {
+                    document.body.classList.remove('sidebar-collapsed');
+                }
+            } catch (e) {}
+        }
+    });
 
     // ── Password Visibility Toggle ─────────────────────────────────────────
     document.querySelectorAll('.input-toggle-pass').forEach(function (btn) {
