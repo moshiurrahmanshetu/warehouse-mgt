@@ -9,7 +9,7 @@ require_once CONTROLLER_PATH . '/AuthController.php';
 
 $auth = new AuthController();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $auth->processLogin();
 } else {
     $auth->showLogin();
