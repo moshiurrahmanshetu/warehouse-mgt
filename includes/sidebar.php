@@ -41,7 +41,6 @@ if ($user) {
            id="nav-users">
             <span class="nav-icon"><i class="bi bi-people"></i></span>
             Users
-            <span class="nav-badge">Soon</span>
         </a>
 
         <a href="<?= e(APP_URL) ?>/roles.php"
@@ -49,7 +48,6 @@ if ($user) {
            id="nav-roles">
             <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
             Roles &amp; Permissions
-            <span class="nav-badge">Soon</span>
         </a>
 
         <?php if(hasPermission('warehouses.view') || hasPermission('zones.view') || hasPermission('racks.view') || hasPermission('shelves.view') || hasPermission('bins.view')): ?>
@@ -171,13 +169,14 @@ if ($user) {
 
         <div class="nav-section-title">System</div>
 
+        <?php if (hasPermission('logs.view') || hasPermission('activity_logs.view')): ?>
         <a href="<?= e(APP_URL) ?>/activity_logs.php"
            class="sidebar-nav-item <?= activeClass('activity') ?>"
            id="nav-activity">
             <span class="nav-icon"><i class="bi bi-activity"></i></span>
             Activity Logs
-            <span class="nav-badge">Soon</span>
         </a>
+        <?php endif; ?>
 
         <?php if (hasPermission('settings.view') || hasPermission('settings.manage')): ?>
         <a href="<?= e(APP_URL) ?>/settings.php"

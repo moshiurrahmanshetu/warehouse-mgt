@@ -10,7 +10,8 @@ $_SESSION["permissions"] = [
     "suppliers.view", "customers.view",
     "categories.view", "brands.view", "units.view", "tax_rates.view", 
     "currencies.view", "attributes.view", "attribute_values.view", "product_tags.view",
-    "settings.view", "settings.edit", "settings.manage"
+    "settings.view", "settings.edit", "settings.manage",
+    "logs.view", "activity_logs.view"
 ];
 
 $pages = [
@@ -19,7 +20,7 @@ $pages = [
     "suppliers.php", "customers.php",
     "categories.php", "brands.php", "units.php", "tax_rates.php",
     "currencies.php", "attributes.php", "attribute_values.php", "product_tags.php",
-    "profile.php", "settings.php"
+    "profile.php", "settings.php", "activity_logs.php"
 ];
 
 $errors = [];
