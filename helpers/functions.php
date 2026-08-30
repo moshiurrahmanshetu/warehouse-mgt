@@ -448,3 +448,27 @@ function exportCsv(string $filename, array $headers, array $data): void
     exit;
 }
 
+/**
+ * Retrieve a system setting value by key.
+ */
+function getSetting(string $key, mixed $default = null): mixed
+{
+    static $settings = null;
+    if ($settings === null) {
+        try {
+            if (class_exists('Database')) {
+                $db = Database::getInstance();
+                $rows = $db->fetchAll("SELECT `key`, `value` FROM `system_settings`");
+                $settings = [];
+                foreach ($rows as $r) {
+                    $settings[$r['key']] = $r['value'];
+                }
+            }
+        } catch (Exception $e) {
+            $settings = [];
+        }
+    }
+    return $settings[$key] ?? $default;
+}
+
+

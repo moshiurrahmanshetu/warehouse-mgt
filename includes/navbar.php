@@ -53,7 +53,11 @@ if ($user) {
             <a href="#" class="dropdown-toggle"
                data-bs-toggle="dropdown" aria-expanded="false"
                id="profileMenuToggle">
-                <div class="profile-avatar-sm"><?= e($initials ?: '?') ?></div>
+                <?php if (!empty($user['avatar']) && file_exists(BASEPATH . '/' . $user['avatar'])): ?>
+                    <img src="<?= e(APP_URL . '/' . $user['avatar']) ?>" alt="Avatar" class="profile-avatar-sm" style="object-fit:cover;">
+                <?php else: ?>
+                    <div class="profile-avatar-sm"><?= e($initials ?: '?') ?></div>
+                <?php endif; ?>
                 <span class="profile-name d-none d-sm-inline"><?= e($user['name'] ?? 'User') ?></span>
                 <i class="bi bi-chevron-down ms-1" style="font-size:11px;color:var(--text-muted)"></i>
             </a>
@@ -64,8 +68,10 @@ if ($user) {
                         <div style="font-size:11px;color:var(--text-muted)"><?= e($user['email'] ?? '') ?></div>
                     </div>
                 </li>
-                <li><a class="dropdown-item" href="#" id="profileLink"><i class="bi bi-person"></i> My Profile</a></li>
-                <li><a class="dropdown-item" href="#" id="settingsLink"><i class="bi bi-gear"></i> Settings</a></li>
+                <li><a class="dropdown-item" href="<?= e(APP_URL) ?>/profile.php" id="profileLink"><i class="bi bi-person"></i> My Profile</a></li>
+                <?php if (hasPermission('settings.view') || hasPermission('settings.manage')): ?>
+                <li><a class="dropdown-item" href="<?= e(APP_URL) ?>/settings.php" id="settingsLink"><i class="bi bi-gear"></i> Settings</a></li>
+                <?php endif; ?>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <a class="dropdown-item text-danger"

@@ -5,18 +5,21 @@ $_SESSION["user"] = ["id" => 1, "name" => "Test Admin"];
 $_SESSION["roles"] = ["admin"];
 // Give all permissions
 $_SESSION["permissions"] = [
+    "dashboard.view", "users.view", "users.manage", "roles.view", "roles.manage",
     "warehouses.view", "zones.view", "racks.view", "shelves.view", "bins.view",
     "suppliers.view", "customers.view",
     "categories.view", "brands.view", "units.view", "tax_rates.view", 
-    "currencies.view", "attributes.view", "attribute_values.view", "product_tags.view"
+    "currencies.view", "attributes.view", "attribute_values.view", "product_tags.view",
+    "settings.view", "settings.edit", "settings.manage"
 ];
 
 $pages = [
-    "dashboard.php",
+    "dashboard.php", "users.php", "roles.php",
     "warehouses.php", "zones.php", "racks.php", "shelves.php", "bins.php",
     "suppliers.php", "customers.php",
     "categories.php", "brands.php", "units.php", "tax_rates.php",
-    "currencies.php", "attributes.php", "attribute_values.php", "product_tags.php"
+    "currencies.php", "attributes.php", "attribute_values.php", "product_tags.php",
+    "profile.php", "settings.php"
 ];
 
 $errors = [];

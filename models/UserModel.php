@@ -166,4 +166,53 @@ class UserModel extends BaseModel
         }
         return $res;
     }
+
+    /**
+     * Find user with password hash (for credential verification).
+     */
+    public function findWithPassword(int $id): array|false
+    {
+        return $this->db->fetchOne(
+            "SELECT id, name, email, password, phone, avatar, status, is_active, last_login_at, last_login, last_activity, created_at
+             FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1",
+            [':id' => $id]
+        );
+    }
+
+    /**
+     * Update profile details for a user (self-service).
+     */
+    public function updateProfile(int $id, array $data): bool
+    {
+        $allowed = ['name', 'email', 'phone', 'avatar'];
+        $filtered = array_intersect_key($data, array_flip($allowed));
+        if (empty($filtered)) return false;
+
+        $this->updateById($id, $filtered);
+        return true;
+    }
+
+    /**
+     * Update user password hash.
+     */
+    public function updatePassword(int $id, string $hashedPassword): bool
+    {
+        $this->db->execute(
+            "UPDATE users SET password = :password, updated_at = NOW() WHERE id = :id",
+            [':password' => $hashedPassword, ':id' => $id]
+        );
+        return true;
+    }
+
+    /**
+     * Update user's last activity timestamp.
+     */
+    public function touchActivity(int $id): void
+    {
+        $this->db->execute(
+            "UPDATE users SET last_activity = NOW() WHERE id = :id",
+            [':id' => $id]
+        );
+    }
 }
+

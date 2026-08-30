@@ -26,7 +26,7 @@
 
     --text-primary:   #f1f5f9;
     --text-secondary: #94a3b8;
-    --text-muted:     #64748b;
+    --text-muted:     #b7b7b8;
 
     --border-color:   rgba(255,255,255,0.07);
     --border-radius:  12px;
@@ -167,6 +167,9 @@ body {
     border-left: 3px solid var(--primary);
 }
 
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    color: var(--bs-nav-tabs-link-active-color) !important;
+}
 .sidebar-nav-item.active .nav-icon { color: var(--primary-light); }
 
 .nav-icon {
@@ -232,7 +235,9 @@ body {
     min-height: 100vh;
     transition: margin-left var(--transition);
 }
-
+.text-muted {
+    color: var(--text-muted) !important;
+}
 /* ─── Top Navbar ─────────────────────────────────────────── */
 .wms-navbar {
     background: var(--bg-navbar);

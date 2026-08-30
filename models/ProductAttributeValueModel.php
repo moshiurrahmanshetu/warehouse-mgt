@@ -67,28 +67,32 @@ class ProductAttributeValueModel extends BaseModel
         return $id;
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, array $data): bool
     {
         $this->updateById($id, $data);
         logActivity('update_attribute_value', 'attribute', "Updated Attribute Value ID $id", $id);
+        return true;
     }
 
-    public function softDelete(int $id): void
+    public function softDelete(int $id): bool
     {
         $this->delete($id);
         logActivity('delete_attribute_value', 'attribute', "Deleted Attribute Value ID $id", $id);
+        return true;
     }
 
-    public function softRestore(int $id): void
+    public function softRestore(int $id): bool
     {
         $this->restore($id);
         logActivity('restore_attribute_value', 'attribute', "Restored Attribute Value ID $id", $id);
+        return true;
     }
 
-    public function toggleStatusLog(int $id): void
+    public function toggleStatusLog(int $id): bool
     {
         $this->toggleStatus($id);
         logActivity('toggle_status_attribute_value', 'attribute', "Toggled Status for Attribute Value ID $id", $id);
+        return true;
     }
 
     public function valueExistsForAttribute(int $attributeId, string $value, ?int $excludeId = null): bool

@@ -179,19 +179,24 @@ if ($user) {
             <span class="nav-badge">Soon</span>
         </a>
 
+        <?php if (hasPermission('settings.view') || hasPermission('settings.manage')): ?>
         <a href="<?= e(APP_URL) ?>/settings.php"
            class="sidebar-nav-item <?= activeClass('settings') ?>"
            id="nav-settings">
             <span class="nav-icon"><i class="bi bi-gear"></i></span>
             Settings
-            <span class="nav-badge">Soon</span>
         </a>
+        <?php endif; ?>
     </nav>
 
     <!-- Sidebar Footer / User -->
     <div class="sidebar-footer">
-        <a href="#" class="sidebar-user">
-            <div class="user-avatar"><?= e($initials ?: '?') ?></div>
+        <a href="<?= e(APP_URL) ?>/profile.php" class="sidebar-user" title="View Profile">
+            <?php if (!empty($user['avatar']) && file_exists(BASEPATH . '/' . $user['avatar'])): ?>
+                <img src="<?= e(APP_URL . '/' . $user['avatar']) ?>" alt="Avatar" class="user-avatar" style="object-fit:cover;">
+            <?php else: ?>
+                <div class="user-avatar"><?= e($initials ?: '?') ?></div>
+            <?php endif; ?>
             <div class="user-info">
                 <div class="user-name"><?= e($user['name'] ?? 'User') ?></div>
                 <div class="user-role"><?= e(implode(', ', array_map('ucfirst', $_SESSION['roles'] ?? ['user']))) ?></div>
